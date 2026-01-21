@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Happy Valentine's Day</title>
+    <title>Cosmic Love</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
@@ -11,80 +11,45 @@
 
     <div id="creation-form-container">
         <div class="form-box">
-            <h2>❤️ 製作你的情人節卡片 ❤️</h2>
-            <p>填寫下方的資訊，產生專屬的動畫連結，然後寫入你的 NFC Tag。</p>
+            <h2>✨ 製作你的粒子心動訊號 ✨</h2>
+            <p>輸入名字，將這段頻率寫入 NFC 黑膠唱片。</p>
             
             <div class="input-group">
-                <label for="input-h1">左邊愛心的文字 (例如: 你的名字)</label>
-                <input type="text" id="input-h1" placeholder="Name 1" maxlength="10">
+                <label>左邊的名字</label>
+                <input type="text" id="input-h1" placeholder="Name 1" maxlength="8">
             </div>
             <div class="input-group">
-                <label for="input-h2">右邊愛心的文字 (例如: 對方的名字)</label>
-                <input type="text" id="input-h2" placeholder="Name 2" maxlength="10">
+                <label>右邊的名字</label>
+                <input type="text" id="input-h2" placeholder="Name 2" maxlength="8">
             </div>
             <div class="input-group">
-                <label for="input-msg">底部的祝福訊息</label>
-                <textarea id="input-msg" placeholder="想說的話..." rows="3"></textarea>
+                <label>底部訊息</label>
+                <textarea id="input-msg" placeholder="I love you..." rows="3"></textarea>
             </div>
             
-            <button id="generate-btn">產生專屬連結</button>
+            <button id="generate-btn">產生粒子連結</button>
             
             <div id="result-area" style="display: none;">
-                <p>你的專屬連結已產生！請複製下方連結並寫入 NFC：</p>
                 <textarea id="generated-url" readonly></textarea>
-                <p class="preview-hint"><a href="#" id="preview-link" target="_blank">點擊這裡預覽動畫</a></p>
+                <p class="preview-hint"><a href="#" id="preview-link" target="_blank">預覽效果</a></p>
             </div>
         </div>
     </div>
 
-
     <div id="stage-container" style="display: none;">
-        <div class="scene">
-            
-            <div id="envelope-group" class="element">
-                <svg viewBox="0 0 200 150" width="200">
-                    <rect x="10" y="50" width="180" height="90" fill="#f8e1e1" stroke="#d4a5a5" stroke-width="2"/>
-                    <polygon id="envelope-flap" points="10,50 100,110 190,50 100,0" fill="#ffd1d1" stroke="#d4a5a5" stroke-width="2" style="transform-origin: 100px 50px;"/>
-                    <text x="100" y="95" text-anchor="middle" font-size="12" fill="#d65a5a" font-family="Arial, sans-serif">Happy Valentine's Day</text>
-                    <circle id="wax-seal" cx="100" cy="80" r="15" fill="#e74c3c" />
-                    <path d="M95 80 L100 85 L105 80" stroke="white" fill="none" stroke-width="2" transform="translate(0, -2)"/>
-                </svg>
-            </div>
-
-            <div id="hearts-container" class="element">
-                <div id="heart-left-group" class="heart-wrapper">
-                    <svg viewBox="0 0 100 90" class="heart-svg">
-                        <path d="M50,85 C10,55 0,30 0,15 C0,5 10,0 25,0 C35,0 45,10 50,20 C55,10 65,0 75,0 C90,0 100,5 100,15 C100,30 90,55 50,85 Z" fill="#ff6b6b"/>
-                        <text id="text-h1" x="50" y="45" text-anchor="middle" font-size="14" fill="white">Name 1</text>
-                    </svg>
-                </div>
-                <div id="heart-right-group" class="heart-wrapper">
-                    <svg viewBox="0 0 100 90" class="heart-svg">
-                        <path d="M50,85 C10,55 0,30 0,15 C0,5 10,0 25,0 C35,0 45,10 50,20 C55,10 65,0 75,0 C90,0 100,5 100,15 C100,30 90,55 50,85 Z" fill="#ff8787"/>
-                        <text id="text-h2" x="50" y="45" text-anchor="middle" font-size="14" fill="white">Name 2</text>
-                    </svg>
-                </div>
-            </div>
-
-            <div id="arrow-group" class="element">
-                <svg viewBox="0 0 300 100" width="300">
-                    <defs>
-                        <linearGradient id="arrowLink" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" style="stop-color:#ffd700;stop-opacity:1" />
-                          <stop offset="100%" style="stop-color:#ffec8b;stop-opacity:1" />
-                        </linearGradient>
-                      </defs>
-                    <line x1="20" y1="50" x2="250" y2="50" stroke="url(#arrowLink)" stroke-width="6" stroke-linecap="round"/>
-                    <polygon points="250,40 280,50 250,60" fill="#ffd700" />
-                    <path d="M20 50 L0 30 M20 50 L0 70 M35 50 L15 30 M35 50 L15 70" stroke="#ffd700" stroke-width="4" stroke-linecap="round"/>
-                </svg>
-            </div>
-
-            <div id="final-message-container" class="element">
-                <p id="final-message-text">Happy Valentine's Day!</p>
-            </div>
-
+        <canvas id="particle-canvas"></canvas>
+        
+        <div id="start-overlay">
+            <div class="envelope-icon">📩</div>
+            <p>You have a message...</p>
         </div>
+
+        <div id="text-layer">
+            <div id="name-left" class="floating-text"></div>
+            <div id="name-right" class="floating-text"></div>
+        </div>
+
+        <div id="final-message"></div>
     </div>
 
     <script src="script.js"></script>
