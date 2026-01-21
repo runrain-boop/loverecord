@@ -1,0 +1,119 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden; /* 防止動畫過程中出現卷軸 */
+}
+
+/* --- 創造模式表單樣式 --- */
+#creation-form-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+.form-box {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.form-box h2 { color: #e74c3c; }
+.input-group { margin-bottom: 15px; text-align: left; }
+.input-group label { display: block; margin-bottom: 5px; color: #666; font-size: 0.9em;}
+.input-group input, .input-group textarea {
+    width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+}
+#generate-btn {
+    background: #e74c3c; color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-size: 1em; transition: background 0.3s; width: 100%;
+}
+#generate-btn:hover { background: #c0392b; }
+#result-area { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;}
+#generated-url { width: 100%; height: 60px; font-size: 0.8em; color: #555; border: 1px dashed #ccc; padding: 5px;}
+.preview-hint { margin-top: 10px; font-size: 0.9em;}
+.preview-hint a { color: #e74c3c; text-decoration: none;}
+
+
+/* --- 觀看模式動畫舞台樣式 --- */
+#stage-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* 初始隱藏，由 JS 控制顯示 */
+}
+
+.scene {
+    position: relative;
+    width: 600px;
+    height: 400px;
+    /* background: rgba(0,0,0,0.05); Debug用 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.element {
+    position: absolute;
+    /* 所有元素初始皆設為透明，由 GSAP 控制顯示 */
+    opacity: 0; 
+}
+
+/* 信封初始狀態 */
+#envelope-group {
+    opacity: 1; /* 信封一開始要是可見的 */
+    z-index: 10;
+}
+
+/* 愛心容器配置 */
+#hearts-container {
+    display: flex;
+    justify-content: center;
+    width: 300px;
+    /* 初始縮小並藏在信封後 */
+    transform: scale(0.2);
+    z-index: 5;
+}
+
+.heart-wrapper {
+    width: 100px;
+    margin: 0 10px;
+    position: relative;
+}
+
+/* 愛心內的文字樣式 */
+.heart-svg text {
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    letter-spacing: 1px;
+}
+
+/* 箭 */
+#arrow-group {
+    z-index: 20;
+    /* 初始位置在畫面左外側 */
+    transform: translateX(-150%); 
+}
+
+/* 底部文字 */
+#final-message-container {
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+}
+
+#final-message-text {
+    font-size: 1.5em;
+    color: #e74c3c;
+    font-weight: bold;
+    text-shadow: 1px 1px 3px rgba(255, 105, 180, 0.3);
+}
