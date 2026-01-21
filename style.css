@@ -1,119 +1,263 @@
-body {
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden; /* 防止動畫過程中出現卷軸 */
+document.addEventListener('DOMContentLoaded', () => {
+    // 檢查網址參數
+    const urlParams = new URLSearchParams(window.location.search);
+    const h1Text = urlParams.get('h1');
+    const h2Text = urlParams.get('h2');
+    const msgText = urlParams.get('msg');
+
+    if (h1Text || h2Text || msgText) {
+        initParticleView(h1Text, h2Text, msgText);
+    } else {
+        initCreationMode();
+    }
+});
+
+// --- 創造模式邏輯 ---
+function initCreationMode() {
+    document.getElementById('creation-form-container').style.display = 'flex';
+    
+    document.getElementById('generate-btn').addEventListener('click', () => {
+        const h1 = document.getElementById('input-h1').value || 'Me';
+        const h2 = document.getElementById('input-h2').value || 'You';
+        const msg = document.getElementById('input-msg').value || 'Happy Valentine\'s Day';
+
+        const baseUrl = window.location.href.split('?')[0];
+        const newUrl = `${baseUrl}?h1=${encodeURIComponent(h1)}&h2=${encodeURIComponent(h2)}&msg=${encodeURIComponent(msg)}`;
+        
+        document.getElementById('result-area').style.display = 'block';
+        document.getElementById('generated-url').value = newUrl;
+        document.getElementById('preview-link').href = newUrl;
+    });
 }
 
-/* --- 創造模式表單樣式 --- */
-#creation-form-container {
-    width: 100%;
-    max-width: 400px;
-    padding: 20px;
-}
+// --- 粒子特效核心邏輯 ---
+function initParticleView(textLeft, textRight, finalMsg) {
+    const stage = document.getElementById('stage-container');
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    const startOverlay = document.getElementById('start-overlay');
+    
+    stage.style.display = 'block';
+    document.getElementById('creation-form-container').style.display = 'none';
 
-.form-box {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    text-align: center;
-}
+    // 設定畫布尺寸
+    let width, height;
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
-.form-box h2 { color: #e74c3c; }
-.input-group { margin-bottom: 15px; text-align: left; }
-.input-group label { display: block; margin-bottom: 5px; color: #666; font-size: 0.9em;}
-.input-group input, .input-group textarea {
-    width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
-}
-#generate-btn {
-    background: #e74c3c; color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-size: 1em; transition: background 0.3s; width: 100%;
-}
-#generate-btn:hover { background: #c0392b; }
-#result-area { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;}
-#generated-url { width: 100%; height: 60px; font-size: 0.8em; color: #555; border: 1px dashed #ccc; padding: 5px;}
-.preview-hint { margin-top: 10px; font-size: 0.9em;}
-.preview-hint a { color: #e74c3c; text-decoration: none;}
+    // 參數設定
+    const PARTICLE_COUNT = 1200; // 粒子數量 (手機如果卡頓可調低)
+    const HEART_SCALE = Math.min(width, height) / 40; // 愛心大小縮放
+    
+    // 粒子類別
+    class Particle {
+        constructor() {
+            this.x = width / 2; // 初始在中心
+            this.y = height / 2;
+            this.targetX = width / 2;
+            this.targetY = height / 2;
+            this.vx = (Math.random() - 0.5) * 10; // 爆炸初始速度
+            this.vy = (Math.random() - 0.5) * 10;
+            this.size = Math.random() * 2 + 0.5;
+            this.color = `rgba(255, ${50 + Math.random() * 100}, ${100 + Math.random() * 100}, ${0.4 + Math.random() * 0.6})`;
+            this.friction = 0.94; // 摩擦力
+            this.ease = 0.05; // 飛向目標的平滑度
+            this.state = 'idle'; // idle, explode, forming, merging, shot
+        }
+
+        update() {
+            if (this.state === 'explode') {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+            } else if (this.state === 'forming' || this.state === 'merging') {
+                // 緩動飛向目標點
+                const dx = this.targetX - this.x;
+                const dy = this.targetY - this.y;
+                this.x += dx * this.ease;
+                this.y += dy * this.ease;
+                
+                // 增加一點顫抖 (像心跳或量子震動)
+                this.x += (Math.random() - 0.5) * 0.5;
+                this.y += (Math.random() - 0.5) * 0.5;
+            } else if (this.state === 'shot') {
+                 // 箭穿過時的震動效果
+                 this.x += (Math.random() - 0.5) * 10;
+                 this.y += (Math.random() - 0.5) * 10;
+            }
+        }
+
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    const particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push(new Particle());
+    }
+
+    // 愛心數學公式 (生成目標座標)
+    function getHeartPoint(t, scale = 10, offsetX = 0, offsetY = 0) {
+        // t 0~2PI
+        const x = 16 * Math.pow(Math.sin(t), 3);
+        const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+        return {
+            x: x * scale + width / 2 + offsetX,
+            y: y * scale + height / 2 + offsetY
+        };
+    }
+
+    // 動畫循環
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        // 加一點微弱的拖影效果
+        // ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        // ctx.fillRect(0, 0, width, height);
+
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    // 繪製箭頭 (另外用 Canvas 畫或是粒子特效)
+    // 為了簡單且好看，我們用一個特殊的「流星粒子」當作箭
+    const arrow = { x: -100, y: height/2, active: false };
+    function drawArrow() {
+        if (!arrow.active) return;
+        arrow.x += 25; // 箭的速度
+
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(arrow.x, arrow.y, 4, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // 畫尾巴
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(arrow.x, arrow.y);
+        ctx.lineTo(arrow.x - 100, arrow.y);
+        ctx.stroke();
+
+        if (arrow.x < width + 200) requestAnimationFrame(drawArrow);
+    }
 
 
-/* --- 觀看模式動畫舞台樣式 --- */
-#stage-container {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* 初始隱藏，由 JS 控制顯示 */
-}
+    // --- 腳本流程控制 (Timeline) ---
+    
+    // 點擊開始
+    startOverlay.addEventListener('click', () => {
+        // 1. 隱藏遮罩
+        gsap.to(startOverlay, { opacity: 0, duration: 1, onComplete: () => startOverlay.style.display = 'none' });
+        
+        // 2. 粒子爆炸
+        particles.forEach(p => p.state = 'explode');
 
-.scene {
-    position: relative;
-    width: 600px;
-    height: 400px;
-    /* background: rgba(0,0,0,0.05); Debug用 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+        // 3. 1.5秒後，粒子聚集成兩顆心
+        setTimeout(() => {
+            // 分配粒子到兩顆心
+            const half = particles.length / 2;
+            const offset = width < 600 ? 60 : 120; // 手機版靠更近
+            
+            particles.forEach((p, i) => {
+                p.state = 'forming';
+                p.ease = 0.03 + Math.random() * 0.05; // 隨機速度
+                
+                // 均勻分佈在愛心輪廓上
+                const t = Math.PI * 2 * Math.random(); 
+                // 或者用 i 讓分佈更均勻: const t = (i % half) / half * Math.PI * 2;
+                
+                // 左心
+                if (i < half) {
+                    const point = getHeartPoint(t, HEART_SCALE * 0.8, -offset, -20);
+                    p.targetX = point.x;
+                    p.targetY = point.y;
+                    p.color = `rgba(255, 100, 150, ${0.5 + Math.random()*0.5})`;
+                } 
+                // 右心
+                else {
+                    const point = getHeartPoint(t, HEART_SCALE * 0.8, offset, -20);
+                    p.targetX = point.x;
+                    p.targetY = point.y;
+                    p.color = `rgba(255, 150, 150, ${0.5 + Math.random()*0.5})`;
+                }
+            });
 
-.element {
-    position: absolute;
-    /* 所有元素初始皆設為透明，由 GSAP 控制顯示 */
-    opacity: 0; 
-}
+            // 顯示名字 (配合愛心位置)
+            const nameL = document.getElementById('name-left');
+            const nameR = document.getElementById('name-right');
+            nameL.textContent = textLeft || "User";
+            nameR.textContent = textRight || "Lover";
+            
+            nameL.style.left = `calc(50% - ${offset}px)`;
+            nameL.style.top = '50%';
+            nameR.style.left = `calc(50% + ${offset}px)`;
+            nameR.style.top = '50%';
 
-/* 信封初始狀態 */
-#envelope-group {
-    opacity: 1; /* 信封一開始要是可見的 */
-    z-index: 10;
-}
+            gsap.to('.floating-text', { opacity: 1, duration: 2, delay: 1 });
 
-/* 愛心容器配置 */
-#hearts-container {
-    display: flex;
-    justify-content: center;
-    width: 300px;
-    /* 初始縮小並藏在信封後 */
-    transform: scale(0.2);
-    z-index: 5;
-}
+        }, 1200);
 
-.heart-wrapper {
-    width: 100px;
-    margin: 0 10px;
-    position: relative;
-}
+        // 4. 合併愛心 (Merge) - 5秒後
+        setTimeout(() => {
+            gsap.to('.floating-text', { opacity: 0, duration: 1 }); // 名字先淡出
 
-/* 愛心內的文字樣式 */
-.heart-svg text {
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-    letter-spacing: 1px;
-}
+            particles.forEach(p => {
+                p.state = 'merging';
+                // 全部重新分配到中間的大愛心
+                const t = Math.PI * 2 * Math.random();
+                // 內縮一點，變成實心或厚邊框的感覺
+                const r = Math.random(); // 隨機半徑縮放，讓心是實心的
+                // 這裡我們只做輪廓比較清楚，稍微有點厚度
+                const scaleVar = (0.8 + Math.random() * 0.4); 
+                
+                const point = getHeartPoint(t, HEART_SCALE * 1.2 * scaleVar, 0, -20);
+                p.targetX = point.x;
+                p.targetY = point.y;
+                // 顏色變成更熱情的紅金
+                p.color = Math.random() > 0.8 ? '#ffd700' : '#ff0044';
+            });
+        }, 5000);
 
-/* 箭 */
-#arrow-group {
-    z-index: 20;
-    /* 初始位置在畫面左外側 */
-    transform: translateX(-150%); 
-}
+        // 5. 邱比特之箭 (Arrow) - 8秒後
+        setTimeout(() => {
+            arrow.active = true;
+            arrow.y = height / 2 - 20; // 調整高度
+            drawArrow();
 
-/* 底部文字 */
-#final-message-container {
-    bottom: 20px;
-    width: 100%;
-    text-align: center;
-}
+            // 當箭穿過時，粒子被驚動 (Shot state)
+            setTimeout(() => {
+                particles.forEach(p => {
+                    // 簡單模擬震動
+                    p.x += (Math.random()-0.5) * 50;
+                    p.y += (Math.random()-0.5) * 50;
+                });
+            }, 600); // 箭飛到中間的時間
 
-#final-message-text {
-    font-size: 1.5em;
-    color: #e74c3c;
-    font-weight: bold;
-    text-shadow: 1px 1px 3px rgba(255, 105, 180, 0.3);
+        }, 8000);
+
+        // 6. 顯示最終文字 - 9秒後
+        setTimeout(() => {
+            const msgDiv = document.getElementById('final-message');
+            msgDiv.textContent = finalMsg || "Happy Valentine's Day";
+            gsap.to(msgDiv, { opacity: 1, y: -20, duration: 2, ease: "power2.out" });
+        }, 9000);
+    });
 }
